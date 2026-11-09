@@ -3,6 +3,7 @@ from html.parser import HTMLParser
 import json
 from pathlib import Path
 import shutil
+import re
 from urllib.parse import quote
 
 root = Path(__file__).resolve().parent
@@ -49,7 +50,21 @@ for path in sorted((site / "reports").rglob("*.html")):
     key = folder if folder in categories else "unfiled"
     label = categories.get(folder, "未分类")
     summary = f'<p>{escape(parser.description)}</p>' if parser.description else ""
-    links.append(f'<li data-group="{escape(key)}"><small>{escape(label)}</small><a href="{url}">{escape(title)}<span aria-hidden="true">↗</span></a>{summary}</li>')
+    document = path.read_text(encoding="utf-8-sig")
+    back = "../" * (len(path.relative_to(site).parts) - 1) + "index.html"
+    navigation = f'<nav data-pagefind-ignore style="padding:10px 5%;background:#f4f3ef"><a style="color:#253f59" href="{back}">← 文献目录</a></nav>'
+    document = re.sub(r"(<body\b[^>]*>)", lambda m: m[0] + navigation, document, count=1, flags=re.I)
+    details = ""
+    figure = ""
+    if url == "reports/gdcm/index.html":
+        for anchor, heading in [("training", "模型训练方法"), ("example", "单句输入示例")]:
+            document = document.replace(f"<h2>{heading}", f'<h2 id="{anchor}">{heading}')
+            details += f'<a href="{url}#{anchor}">{heading} →</a>'
+        details = f'<div class="shortcuts">{details}</div>'
+        figure = f'<a class="figure" href="{url}"><img src="reports/gdcm/figures/concept_utilization.png" alt="GDCM 十个概念的利用情况"><span>概念利用情况</span></a>'
+    path.write_text(document,encoding="utf-8")
+    links.append(f'<li data-group="{escape(key)}" data-url="{url}"><article><div class="entry"><small>{escape(label)}</small><h3><a href="{url}">{escape(title)}</a></h3>{summary}<p class="excerpt" hidden></p>{details}</div>{figure}</article></li>')
+
 
 rows = [link for group in groups.values() for link in group] + legacy
 counts = [(key, name, len(groups[key])) for key, name in categories.items()]
