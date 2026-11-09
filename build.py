@@ -5,6 +5,8 @@ from pathlib import Path
 import shutil
 import re
 from urllib.parse import quote
+from xml.etree import ElementTree as ET
+from zipfile import ZipFile
 
 root = Path(__file__).resolve().parent
 site = root / "_site"
@@ -38,6 +40,38 @@ class Title(HTMLParser):
 
 
 categories = json.loads((root / "categories.json").read_text(encoding="utf-8"))
+for source in sorted((site / "reports").rglob("*")):
+    kind = source.suffix.lower()
+    if kind not in (".svg", ".docx") or source.name.startswith("~$"):
+        continue
+    if any(part.lower() in {"assets", "figures", "images"} for part in source.relative_to(site / "reports").parts[:-1]):
+        continue
+    title = source.stem
+    href = quote(source.name, safe="")
+    if kind == ".svg":
+        svg = ET.parse(source).getroot()
+        ns = "{http://www.w3.org/2000/svg}"
+        title = svg.findtext(ns + "title") or title
+        paragraphs = ["".join(node.itertext()) for node in svg.iter()
+                      if node.tag in {ns + "text", ns + "desc", "text", "desc"}]
+        preview = f'<img src="{href}" alt="{escape(title)}">'
+    else:
+        w = "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}"
+        with ZipFile(source) as doc:
+            body = ET.fromstring(doc.read("word/document.xml"))
+            if "docProps/core.xml" in doc.namelist():
+                props = ET.fromstring(doc.read("docProps/core.xml"))
+                title = props.findtext("{http://purl.org/dc/elements/1.1/}title") or title
+        paragraphs = ["".join(t.text or "" for t in p.iter(w + "t")) for p in body.iter(w + "p")]
+        preview = ""
+    text = "".join(f"<p>{escape(line)}</p>" for line in paragraphs if line.strip())
+    output = source.with_name(source.name + ".html")
+    if output.exists():
+        raise ValueError(f"预览页文件名冲突: {output}")
+    output.write_text(f'''<!doctype html><html lang="zh"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1"><title>{escape(title)}</title>
+<style>body{{margin:0;background:#faf9f6;color:#202d39;font:17px/1.8 system-ui,sans-serif}}main{{max-width:900px;margin:3rem auto;padding:0 5%}}img{{width:100%;height:auto;background:white}}a{{color:#754036}}p{{overflow-wrap:anywhere}}</style>
+</head><body><main><h1>{escape(title)}</h1><a download href="{href}">下载 {kind[1:].upper()} 原文件</a>{preview}{text}</main></body></html>''', encoding="utf-8")
 groups = {key: [] for key in categories}
 legacy = []
 for path in sorted((site / "reports").rglob("*.html")):

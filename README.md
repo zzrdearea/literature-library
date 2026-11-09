@@ -13,7 +13,7 @@ git clone https://github.com/zzrdearea/literature-library.git
 cd literature-library
 ```
 
-每次投稿先在仓库内运行 `git pull --rebase origin main`，然后把报告放进对应分类目录（category-01 到 category-05）。例如第三类的新报告放入 `reports/category-03/my-paper/index.html`，配图放在同一篇报告的子目录。按实际文件夹名执行：
+每次投稿先在仓库内运行 `git pull --rebase origin main`，然后把 HTML、SVG 或 DOCX 放进对应分类目录（category-01 到 category-05）。例如第三类的新报告放入 `reports/category-03/my-paper/index.html`，配图放在同一篇报告的子目录。按实际文件夹名执行：
 
 ```sh
 git add -- reports/category-03/my-paper/
@@ -26,6 +26,8 @@ git push origin main
 团队确定分类名称后，在 categories.json 修改显示名称即可，目录编号保持固定。页面标题取自 HTML 的 title。更新同一文件保留原链接，删除文件后下次发布会移除目录和索引中的记录。
 
 图表可以内嵌，也可随报告放在独立子目录，用相对路径引用。正文需要写进 HTML；浏览器执行 JavaScript 后才出现的正文请先导出为静态页面。只接受可信成员的网页，按网站可见范围选择报告。搜索覆盖 HTML 正文，PDF 附件内容不进入索引。
+
+独立 SVG、DOCX 可直接提交，发布时自动生成阅读页和原文件下载链接。SVG 索引文本标签与描述，DOCX 索引正文段落及表格文字。图像内文字和已转为路径的字形不做 OCR。作为插图或附件的文件请放入 figures/、images/ 或 assets/ 子目录，避免单独列入目录。
 
 ## 本地检查
 
