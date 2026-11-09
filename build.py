@@ -162,7 +162,12 @@ for f in sorted(reports.rglob("*")):
         parser.feed(preview.read_text(encoding="utf-8-sig"))
         title = "".join(parser.parts).strip() or title
         description = parser.description
-    add_entry(f,title,[],"资料分享",description,[f],[],False)
+    first_commit = subprocess.run(
+        ["git", "log", "--follow", "--diff-filter=A", "--format=%an", "--", f.relative_to(root).as_posix()],
+        cwd=root, capture_output=True, text=True, encoding="utf-8",
+    )
+    authors = first_commit.stdout.strip().splitlines()
+    add_entry(f, title, authors[-1:], "资料分享", description, [f], [], False)
 
 for path in (site / "reports").rglob("*.html"):
     back = "../" * (len(path.relative_to(site).parts) - 1) + "index.html"
