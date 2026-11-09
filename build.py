@@ -1,5 +1,6 @@
 from html import escape
 from html.parser import HTMLParser
+import json
 import os
 from pathlib import Path
 import shutil
@@ -31,17 +32,29 @@ class Title(HTMLParser):
             self.parts.append(data)
 
 
-links = []
+categories = json.loads((root / "categories.json").read_text(encoding="utf-8"))
+groups = {key: [] for key in categories}
+legacy = []
 for path in sorted((site / "reports").rglob("*.html")):
     parser = Title()
     parser.feed(path.read_text(encoding="utf-8-sig"))
     title = "".join(parser.parts).strip() or path.stem
     url = quote(path.relative_to(site).as_posix())
+    folder = path.relative_to(site / "reports").parts[0]
+    links = groups.get(folder, legacy)
     links.append(f'<li><a href="{url}">{escape(title)}</a></li>')
 
 repo = os.environ.get("GITHUB_REPOSITORY")
 branch = quote(os.environ.get("GITHUB_REF_NAME", "main"), safe="")
-upload = f'<a href="https://github.com/{repo}/upload/{branch}/reports">上传 HTML 报告</a>' if repo else ""
+sections = []
+for folder, label in categories.items():
+    links = groups[folder]
+    upload = ""
+    if repo:
+        target = f"https://github.com/{repo}/upload/{branch}/reports/{quote(folder, safe='')}"
+        upload = f'<a href="{target}">上传到此类</a>'
+    sections.append(f'<section><header><h2>{escape(label)} · {len(links)}</h2>{upload}</header><ul>{"".join(links)}</ul></section>')
+if legacy:
+    sections.append(f'<section><h2>未分类报告 · {len(legacy)}</h2><ul>{"".join(legacy)}</ul></section>')
 page = (root / "index.html").read_text(encoding="utf-8")
-page = page.replace("@@UPLOAD@@", upload).replace("@@COUNT@@", str(len(links)))
-(site / "index.html").write_text(page.replace("@@REPORTS@@", "".join(links)), encoding="utf-8")
+(site / "index.html").write_text(page.replace("@@REPORTS@@", "".join(sections)), encoding="utf-8")
