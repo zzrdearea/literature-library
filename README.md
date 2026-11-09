@@ -1,40 +1,50 @@
-# 共享文献报告库
+# 课题组协作资料库
 
-## 首次部署
-
-把本目录内的文件放在仓库根目录，包含隐藏目录 .github。默认发布分支为 main。在仓库 Settings → Pages → Build and deployment → Source 选择 GitHub Actions。推送一次提交，或在 Actions → Publish report library 中点击 Run workflow。发布完成后，Settings → Pages 显示访问网址。
+[打开小组工作台](https://zzrdearea.github.io/literature-library/)
 
 ## 成员投稿
 
-成员需接受仓库协作者邀请，使用有写入权限的账号推送。首次克隆：
+接受仓库协作者邀请后，首次运行：
 
 ```sh
 git clone https://github.com/zzrdearea/literature-library.git
 cd literature-library
 ```
 
-每次投稿先在仓库内运行 `git pull --rebase origin main`，然后把 HTML、SVG 或 DOCX 放进对应分类目录（category-01 到 category-05）。例如第三类的新报告放入 `reports/category-03/my-paper/index.html`，配图放在同一篇报告的子目录。按实际文件夹名执行：
+每次开始前执行 `git pull --rebase origin main`。个人分享可直接放入分类目录，支持 HTML、DOCX、SVG、PDF。例如推荐算法对应 reports/category-05/。
+
+共同任务在分类目录下新建文件夹。复制以下内容到该文件夹的 README.md，填写真实信息。即使只有进度、还没有文件，也可以提交。
+
+```markdown
+# 工作名称
+
+参与人：成员甲、成员乙
+状态：进行中
+当前进度：已完成哪些工作，下一步准备做什么。
+
+## 进展记录
+- 日期，成员：本次完成的工作。
+```
+
+把工作材料放在 README.md 旁或子目录。HTML 直接在线阅读，SVG 和 DOCX 有预览及原文件链接，其他工作附件按文件链接展示。配图和辅助文件放进 figures/、images/ 或 assets/。状态通常填写「进行中」「已完成」或「待更新」。更新时追加进展记录，按需要修改当前进度。
+
+例如在仓库根目录提交推荐算法分类中的项目：
 
 ```sh
-git add -- reports/category-03/my-paper/
-git commit -m "新增第三类文献报告"
+git add -- reports/category-05/项目简称/
+git commit -m "更新项目进度与材料"
 git push origin main
 ```
 
-若推送时同伴已更新 main，运行 `git pull --rebase origin main`，处理可能的冲突，再推送。Actions 发布成功后，读者刷新首页即可浏览和检索新报告。
+推送冲突时先同步远端再重试。网站按对应任务目录最后一次 Git 提交排序。工作名称、参与人、文件名可检索，成员、类别与状态可组合筛选。所有提交到此公开库的材料和进度都公开可读。
 
-团队确定分类名称后，在 categories.json 修改显示名称即可，目录编号保持固定。页面标题取自 HTML 的 title。更新同一文件保留原链接，删除文件后下次发布会移除目录和索引中的记录。
+## 部署与本地预览
 
-图表可以内嵌，也可随报告放在独立子目录，用相对路径引用。正文需要写进 HTML；浏览器执行 JavaScript 后才出现的正文请先导出为静态页面。只接受可信成员的网页，按网站可见范围选择报告。搜索覆盖 HTML 正文，PDF 附件内容不进入索引。
+在 Settings → Pages 选择 GitHub Actions。推送 main 后自动构建并发布。本地运行：
 
-独立 SVG、DOCX 可直接提交，发布时自动生成阅读页和原文件下载链接。SVG 索引文本标签与描述，DOCX 索引正文段落及表格文字。图像内文字和已转为路径的字形不做 OCR。作为插图或附件的文件请放入 figures/、images/ 或 assets/ 子目录，避免单独列入目录。
-
-## 本地检查
-
-在本目录运行以下命令，然后访问 http://localhost:8000。首次生成索引需要联网安装 Pagefind。
-
-```
+```sh
 python build.py
-npx --yes pagefind@1.4.0 --site _site --glob "reports/**/*.html" --force-language zh
 python -m http.server 8000 --directory _site
 ```
+
+打开 http://localhost:8000 。大类名称由团队在 categories.json 配置。
