@@ -1,0 +1,6 @@
+<!doctype html><html lang="zh"><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>共享文献报告库</title>
+<link rel="stylesheet" href="./pagefind/pagefind-ui.css"><style>
+*{box-sizing:border-box}body{background:#f5f7f6;color:#163530;font:16px/1.7 system-ui,sans-serif;max-width:960px;margin:8vh auto;padding:0 5%}header{display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap}h1{font-size:clamp(26px,5vw,42px)}a{color:#146859}header a{background:#165d50;color:white;padding:.5em 1em;border-radius:6px;text-decoration:none}li{background:white;border-bottom:1px solid #cfdbd6;padding:1em}ul{padding:0;list-style:none}#search{margin:1.5em 0;--pagefind-ui-primary:#146859}
+</style><header><h1>共享文献报告库</h1>@@UPLOAD@@</header>
+<div id="search"></div><h2>全部报告 · @@COUNT@@</h2><ul>@@REPORTS@@</ul>
+<script src="./pagefind/pagefind-ui.js"></script><script>if(window.PagefindUI)new PagefindUI({element:"#search",bundlePath:"./pagefind/",baseUrl:"./",translations:{placeholder:"搜索文献标题或正文"}});</script></html>

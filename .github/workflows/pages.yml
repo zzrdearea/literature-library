@@ -1,0 +1,32 @@
+name: Publish report library
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+concurrency:
+  group: pages
+  cancel-in-progress: false
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/configure-pages@v5
+      - run: python3 build.py
+      - run: npx --yes pagefind@1.4.0 --site _site --glob 'reports/**/*.html' --force-language zh
+      - name: Verify Chinese index and search interface
+        run: |
+          test -s _site/pagefind/pagefind-ui.js
+          python3 -c "import json; assert json.load(open('_site/pagefind/pagefind-entry.json'))['languages']['zh']['page_count'] > 0"
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+      - id: deploy
+        uses: actions/deploy-pages@v4

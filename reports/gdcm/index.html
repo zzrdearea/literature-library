@@ -1,0 +1,113 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1"><title>GDCM 概念主题与示例</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#f3f7f8;color:#163d50;font-family:Segoe UI,Microsoft YaHei,sans-serif;line-height:1.65}header{padding:34px max(24px,6vw);background:#173f52;color:#fff}header h1{margin:0}main{max-width:1180px;margin:auto;padding:24px 20px 50px}h2{margin-top:0}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px;margin-bottom:26px}.card{background:#fff;border:1px solid #d8e5e9;border-radius:12px;padding:20px;box-shadow:0 5px 18px #173e5110}.concept{border-left:5px solid #237f8e}.concept.inactive{border-left-color:#b8c8cc}.cardhead{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}.cardhead h3{margin:0}.badge{white-space:nowrap;padding:3px 9px;border-radius:999px;font-size:13px}.ok{background:#dff3e8;color:#176c4c}.mutedbadge{background:#e8edef;color:#61737b}.muted{font-size:14px;color:#627d88}.notice{background:#eef5f7;border-left:5px solid #237f8e;padding:14px 16px;border-radius:8px;margin-bottom:20px}.training{margin-bottom:26px}.flow{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:14px 0}.step{background:#edf4f6;border-radius:9px;padding:14px}.step b{display:block;color:#176c7c;margin-bottom:5px}.objective{background:#f6f8f9;border-radius:8px;padding:13px 15px}.params{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}.params span{background:#e7f0f2;border-radius:999px;padding:4px 10px;font-size:13px}.sample{margin-top:8px}.input,.translation-line{padding:14px;border-radius:8px;margin:10px 0}.input{background:#f2f6f7}.translation-line{background:#edf7f1}table{width:100%;border-collapse:collapse}th,td{padding:9px;border-bottom:1px solid #dfe8eb;text-align:left}.bar{width:180px;height:10px;background:#dce8eb;border-radius:99px;overflow:hidden}.bar i{display:block;height:100%;background:#237f8e}.summary{background:#173f52;color:#fff;padding:12px 14px;border-radius:8px}@media(max-width:820px){.flow{grid-template-columns:1fr 1fr}}@media(max-width:720px){.grid,.flow{grid-template-columns:1fr}.bar{width:100px}table{font-size:13px}}
+</style></head><body><header><h1>GDCM：10 个概念主题与单句示例</h1></header><main>
+<div class="notice">以下展示模型学习到的 10 个概念主题类型。概念名称依据概念词归纳；“稳定激活”表示该概念在评论中被模型持续使用，“候选概念”表示使用率较低。</div>
+<section class="card training">
+  <h2>模型训练方法</h2>
+  <div class="flow">
+    <div class="step"><b>1. 构造训练数据</b>从 Yelp 评论中平衡抽取 8,000 条：4—5 星作为高评分，1—3 星作为非高评分。</div>
+    <div class="step"><b>2. 划分数据</b>清洗后得到训练集 5,593 条、验证集 1,200 条、测试集 1,200 条。</div>
+    <div class="step"><b>3. 文本表示</b>建立 3,000 词的词袋，并用窗口大小 4 构造 231,958 个词语上下文样本。</div>
+    <div class="step"><b>4. 联合训练</b>设置 10 个潜在概念，同时学习词向量、文档概念权重和高评分预测器。</div>
+  </div>
+  <div class="objective"><b>联合优化目标：</b>上下文重构损失使语义相近的词靠近；稀疏约束让每条评论集中于少数概念；监督预测损失使概念与高评分结果相关；多样性约束减少概念之间的重复。</div>
+  <div class="params">
+    <span>概念数 10</span><span>词向量维度 50</span><span>隐藏层 64</span><span>Dropout 0.15</span>
+    <span>学习率 0.003</span><span>批量 2,048</span><span>训练 20 Epoch</span><span>参数量 347,385</span>
+  </div>
+  <p class="muted">前 3 个 Epoch 先训练结果预测部分；之后进行联合优化。每轮在验证集上计算 AUC，最终选择验证表现最好的 Epoch 1，再对测试集评估一次。训练使用作者公开的 GDCM 实现。</p>
+</section>
+<section class="grid">
+        <article class="card concept inactive">
+          <div class="cardhead"><h3>概念 1｜咖啡甜点与休闲氛围</h3><span class="badge mutedbadge">未稳定激活</span></div>
+          <p><b>FREX 候选词：</b>blue, normal, cakes, fan, blocks, fault, tea, whipped, let, large, play, menus, machine, west, welcoming</p>
+          <p><b>测试集平均权重：</b>0.28%　<b>预测系数：</b>+0.286（正向）</p>
+          <p class="muted">平均权重低于 1%，主题类型依据候选词归纳，解释时应视为候选概念。</p>
+        </article>
+        <article class="card concept active">
+          <div class="cardhead"><h3>概念 2｜入座等待与服务体验</h3><span class="badge ok">稳定激活</span></div>
+          <p><b>FREX 候选词：</b>simple, honest, given, hear, knew, seating, hill, fairly, rare, continued, understand, sitting, additional, hostess, attentive</p>
+          <p><b>测试集平均权重：</b>51.06%　<b>预测系数：</b>-2.402（负向）</p>
+          <p class="muted">该概念在测试评论中被大量使用，可以结合代表评论解释。</p>
+        </article>
+        <article class="card concept inactive">
+          <div class="cardhead"><h3>概念 3｜披萨质量与性价比</h3><span class="badge mutedbadge">未稳定激活</span></div>
+          <p><b>FREX 候选词：</b>pepperoni, rubbery, arrived, sell, value, money, self, rolls, appreciate, dog, incredible, fair, multiple, notch, mushrooms</p>
+          <p><b>测试集平均权重：</b>0.27%　<b>预测系数：</b>-0.308（负向）</p>
+          <p class="muted">平均权重低于 1%，主题类型依据候选词归纳，解释时应视为候选概念。</p>
+        </article>
+        <article class="card concept inactive">
+          <div class="cardhead"><h3>概念 4｜特殊饮食与新鲜配菜</h3><span class="badge mutedbadge">未稳定激活</span></div>
+          <p><b>FREX 候选词：</b>gluten, noodles, hungry, comfortable, bartender, crowd, rooms, fresh, lettuce, space, car, nearby, broccoli, bringing, looks</p>
+          <p><b>测试集平均权重：</b>0.31%　<b>预测系数：</b>+0.913（正向）</p>
+          <p class="muted">平均权重低于 1%，主题类型依据候选词归纳，解释时应视为候选概念。</p>
+        </article>
+        <article class="card concept inactive">
+          <div class="cardhead"><h3>概念 5｜价格、员工与门店氛围</h3><span class="badge mutedbadge">未稳定激活</span></div>
+          <p><b>FREX 候选词：</b>red, buy, highly, unless, lighting, dollars, jazz, that&#x27;s, proceeded, tuesday, employee, agree, service, hipster, yes</p>
+          <p><b>测试集平均权重：</b>0.49%　<b>预测系数：</b>+1.601（正向）</p>
+          <p class="muted">平均权重低于 1%，主题类型依据候选词归纳，解释时应视为候选概念。</p>
+        </article>
+        <article class="card concept inactive">
+          <div class="cardhead"><h3>概念 6｜啤酒、馅料与餐品选择</h3><span class="badge mutedbadge">未稳定激活</span></div>
+          <p><b>FREX 候选词：</b>wrapped, consistency, strong, workers, love, receive, original, choices, nicely, run, beer, stuffed, cheesy, hope, getting</p>
+          <p><b>测试集平均权重：</b>0.84%　<b>预测系数：</b>+2.020（正向）</p>
+          <p class="muted">平均权重低于 1%，主题类型依据候选词归纳，解释时应视为候选概念。</p>
+        </article>
+        <article class="card concept inactive">
+          <div class="cardhead"><h3>概念 7｜口味不佳与用餐失望</h3><span class="badge mutedbadge">未稳定激活</span></div>
+          <p><b>FREX 候选词：</b>longer, saw, poor, dont, forget, tasted, drinking, girl, considering, restaurants, lamb, deep, sticks, children, got</p>
+          <p><b>测试集平均权重：</b>0.24%　<b>预测系数：</b>+0.795（正向）</p>
+          <p class="muted">平均权重低于 1%，主题类型依据候选词归纳，解释时应视为候选概念。</p>
+        </article>
+        <article class="card concept active">
+          <div class="cardhead"><h3>概念 8｜菜品推荐与整体满意</h3><span class="badge ok">稳定激活</span></div>
+          <p><b>FREX 候选词：</b>would&#x27;ve, refills, summer, we&#x27;ll, received, biscuit, server, heat, piece, doesn&#x27;t, i&#x27;ve, choose, shame, far, curry</p>
+          <p><b>测试集平均权重：</b>45.80%　<b>预测系数：</b>+2.644（正向）</p>
+          <p class="muted">该概念在测试评论中被大量使用，可以结合代表评论解释。</p>
+        </article>
+        <article class="card concept inactive">
+          <div class="cardhead"><h3>概念 9｜家庭聚餐与特色餐品</h3><span class="badge mutedbadge">未稳定激活</span></div>
+          <p><b>FREX 候选词：</b>i&#x27;d, grits, enjoying, plenty, family, cause, duck, word, anytime, bites, sister, general, hopefully, craft, pita</p>
+          <p><b>测试集平均权重：</b>0.43%　<b>预测系数：</b>+1.197（正向）</p>
+          <p class="muted">平均权重低于 1%，主题类型依据候选词归纳，解释时应视为候选概念。</p>
+        </article>
+        <article class="card concept inactive">
+          <div class="cardhead"><h3>概念 10｜素食小食与价格体验</h3><span class="badge mutedbadge">未稳定激活</span></div>
+          <p><b>FREX 候选词：</b>moved, properly, big, vegan, glad, hummus, like, past, tortilla, cheap, house, pastries, mushy, presented, grill</p>
+          <p><b>测试集平均权重：</b>0.29%　<b>预测系数：</b>+0.060（正向）</p>
+          <p class="muted">平均权重低于 1%，主题类型依据候选词归纳，解释时应视为候选概念。</p>
+        </article></section>
+
+      <section class="card sample">
+        <h2>单句输入示例</h2>
+        <div class="input"><b>英文输入：</b>long long long wait but the food was good.  I had the shrimp and grits</div>
+        <div class="translation-line"><b>中文翻译：</b>等了非常久，不过食物很好吃。我点了虾仁和玉米糊。</div>
+        <h3>模型输出：10 个概念权重</h3>
+        <table><thead><tr><th>概念</th><th>主题类型</th><th>权重</th><th>分布</th></tr></thead>
+        <tbody>
+          <tr><td>概念 1</td><td>咖啡甜点与休闲氛围</td><td>0.0179</td>
+          <td><div class="bar"><i style="width:1.79%"></i></div></td></tr>
+          <tr><td>概念 2</td><td>入座等待与服务体验</td><td>0.0741</td>
+          <td><div class="bar"><i style="width:7.41%"></i></div></td></tr>
+          <tr><td>概念 3</td><td>披萨质量与性价比</td><td>0.0153</td>
+          <td><div class="bar"><i style="width:1.53%"></i></div></td></tr>
+          <tr><td>概念 4</td><td>特殊饮食与新鲜配菜</td><td>0.0223</td>
+          <td><div class="bar"><i style="width:2.23%"></i></div></td></tr>
+          <tr><td>概念 5</td><td>价格、员工与门店氛围</td><td>0.0390</td>
+          <td><div class="bar"><i style="width:3.90%"></i></div></td></tr>
+          <tr><td>概念 6</td><td>啤酒、馅料与餐品选择</td><td>0.0582</td>
+          <td><div class="bar"><i style="width:5.82%"></i></div></td></tr>
+          <tr><td>概念 7</td><td>口味不佳与用餐失望</td><td>0.0152</td>
+          <td><div class="bar"><i style="width:1.52%"></i></div></td></tr>
+          <tr><td>概念 8</td><td>菜品推荐与整体满意</td><td>0.7034</td>
+          <td><div class="bar"><i style="width:70.34%"></i></div></td></tr>
+          <tr><td>概念 9</td><td>家庭聚餐与特色餐品</td><td>0.0357</td>
+          <td><div class="bar"><i style="width:3.57%"></i></div></td></tr>
+          <tr><td>概念 10</td><td>素食小食与价格体验</td><td>0.0188</td>
+          <td><div class="bar"><i style="width:1.88%"></i></div></td></tr></tbody></table>
+        <p class="summary"><b>主导概念：</b>概念 8「菜品推荐与整体满意」，权重 0.7034。</p>
+      </section>
+</main></body></html>
