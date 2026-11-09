@@ -17,8 +17,13 @@ class Title(HTMLParser):
         super().__init__()
         self.active = False
         self.parts = []
+        self.description = ""
 
     def handle_starttag(self, tag, attrs):
+        if tag == "meta":
+            meta = dict(attrs)
+            if meta.get("name") == "description":
+                self.description = meta.get("content") or ""
         if tag == "title":
             self.active = True
 
@@ -41,13 +46,18 @@ for path in sorted((site / "reports").rglob("*.html")):
     url = quote(path.relative_to(site).as_posix())
     folder = path.relative_to(site / "reports").parts[0]
     links = groups.get(folder, legacy)
-    links.append(f'<li><a href="{url}">{escape(title)}</a></li>')
+    key = folder if folder in categories else "unfiled"
+    label = categories.get(folder, "未分类")
+    summary = f'<p>{escape(parser.description)}</p>' if parser.description else ""
+    links.append(f'<li data-group="{escape(key)}"><small>{escape(label)}</small><a href="{url}">{escape(title)}<span aria-hidden="true">↗</span></a>{summary}</li>')
 
-sections = []
-for folder, label in categories.items():
-    links = groups[folder]
-    sections.append(f'<section><header><h2>{escape(label)} · {len(links)}</h2></header><ul>{"".join(links)}</ul></section>')
+rows = [link for group in groups.values() for link in group] + legacy
+counts = [(key, name, len(groups[key])) for key, name in categories.items()]
 if legacy:
-    sections.append(f'<section><h2>未分类报告 · {len(legacy)}</h2><ul>{"".join(legacy)}</ul></section>')
+    counts.append(("unfiled", "未分类", len(legacy)))
+buttons = []
+for key, name, count in [("all", "全部报告", len(rows)), *counts]:
+    buttons.append(f'<button type="button" data-key="{escape(key)}" aria-pressed="{str(key == "all").lower()}">{escape(name)}<b>{count}</b></button>')
 page = (root / "index.html").read_text(encoding="utf-8")
-(site / "index.html").write_text(page.replace("@@REPORTS@@", "".join(sections)), encoding="utf-8")
+page = page.replace("@@NAV@@", "".join(buttons)).replace("@@COUNT@@", str(len(rows)))
+(site / "index.html").write_text(page.replace("@@REPORTS@@", "".join(rows)), encoding="utf-8")

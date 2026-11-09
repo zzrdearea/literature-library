@@ -1,6 +1,26 @@
-<!doctype html><html lang="zh"><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>共享文献报告库</title>
-<link rel="stylesheet" href="./pagefind/pagefind-ui.css"><style>
-*{box-sizing:border-box}body{background:#f5f7f6;color:#163530;font:16px/1.7 system-ui,sans-serif;max-width:960px;margin:8vh auto;padding:0 5%}header{display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap}h1{font-size:clamp(26px,5vw,42px)}a{color:#146859}header a{background:#165d50;color:white;padding:.5em 1em;border-radius:6px;text-decoration:none}li{background:white;border-bottom:1px solid #cfdbd6;padding:1em}ul{padding:0;list-style:none}#search{margin:1.5em 0;--pagefind-ui-primary:#146859}
-</style><header><h1>共享文献报告库</h1></header>
-<div id="search"></div>@@REPORTS@@
-<script src="./pagefind/pagefind-ui.js"></script><script>if(window.PagefindUI)new PagefindUI({element:"#search",bundlePath:"./pagefind/",baseUrl:"./",translations:{placeholder:"搜索文献标题或正文"}});</script></html>
+<!doctype html>
+<html lang="zh"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>共享文献报告库</title>
+<link rel="stylesheet" href="./pagefind/pagefind-ui.css">
+<style>
+*{box-sizing:border-box}body{margin:0;background:#faf9f6;color:#252d2b;font:16px/1.65 "Segoe UI","Microsoft YaHei",sans-serif}main{max-width:1180px;margin:auto;padding:42px clamp(18px,4vw,56px) 80px}
+.hero{background:#183f38;color:#fffaf0;border-radius:5px;padding:clamp(24px,5vw,64px);position:relative;overflow:hidden}.hero h1{font:600 clamp(30px,4.4vw,57px)/1.25 Georgia,"Songti SC",SimSun,serif;margin:0 0 28px;letter-spacing:.02em}
+.books{position:absolute;right:5%;bottom:0;display:flex;align-items:flex-end;gap:5px;height:90%;opacity:.85;pointer-events:none}.books i{width:30px;height:78%;background:repeating-linear-gradient(0deg,transparent 0 13px,#fff4 14px 15px,transparent 16px 35px),#46786b;border:1px solid #a6c5ac}.books i:nth-child(2){height:62%;width:42px;background-color:#9b7850}.books i:nth-child(3){height:87%;background-color:#65887d}.books i:last-child{height:70%;transform:rotate(-10deg);transform-origin:bottom right;background-color:#9eab83}
+#search{position:relative;max-width:72%;--pagefind-ui-scale:.9;--pagefind-ui-border-radius:4px;--pagefind-ui-primary:#24594d;--pagefind-ui-text:#213931;--pagefind-ui-border:#d2ddd6}.pagefind-ui__drawer:not(:empty){background:white;padding:0 16px;border-radius:4px}
+.layout{display:grid;grid-template-columns:180px minmax(0,1fr);gap:clamp(24px,5vw,68px);margin-top:42px}h2{font-size:23px;margin:0}nav h2{font-size:14px;color:#57635e;margin-bottom:14px}button{display:flex;align-items:center;justify-content:space-between;width:100%;font:inherit;background:none;border:0;cursor:pointer;color:inherit;padding:8px 12px;border-radius:3px}button:hover{background:#edece6}button[aria-pressed=true]{background:#dce9e0;color:#184e40;font-weight:650}button b{font-size:13px;font-weight:500}
+.heading{display:flex;align-items:baseline;justify-content:space-between;border-bottom:2px solid #315a4e;padding-bottom:12px}.heading span,small{color:#5b6861;font-size:14px}ul{list-style:none;margin:0;padding:0}li{padding:22px 0;border-bottom:1px solid #d7dcd4}li a{display:flex;align-items:baseline;justify-content:space-between;gap:1em;color:#183e33;text-decoration:none;font:600 24px/1.5 Georgia,"Microsoft YaHei",sans-serif;margin:4px 0}li a:hover{text-decoration:underline}li a span{font:20px sans-serif}li p{margin:8px 0 0;color:#495750}button:focus-visible,a:focus-visible{outline:3px solid #b58837;outline-offset:2px}[hidden]{display:none!important}
+@media(max-width:720px){main{padding-top:16px}.books{opacity:.18}.hero h1{position:relative}#search{max-width:100%}.layout{display:block;margin-top:24px}nav{margin-bottom:24px}.filters{display:flex;flex-wrap:wrap;gap:5px}.filters button{width:auto;border:1px solid #d7dcd4;gap:8px;padding:4px 9px}li a{font-size:20px}}
+</style></head><body><main>
+<header class="hero"><div class="books" aria-hidden="true"><i></i><i></i><i></i><i></i></div><h1>共享文献报告库</h1><div id="search"></div></header>
+<div class="layout"><nav aria-label="按类别浏览"><h2>按类别浏览</h2><div class="filters">@@NAV@@</div></nav>
+<section><div class="heading"><h2 id="group">全部报告</h2><span id="total">@@COUNT@@ 篇</span></div><ul>@@REPORTS@@</ul><p id="empty" hidden>此类别暂无报告。</p></section></div></main>
+<script src="./pagefind/pagefind-ui.js"></script><script>
+if(window.PagefindUI)new PagefindUI({element:"#search",bundlePath:"./pagefind/",baseUrl:"./",showImages:false,translations:{placeholder:"搜索全部报告的标题或正文"}});
+const buttons=document.querySelectorAll("button[data-key]");
+for(const button of buttons)button.addEventListener("click",()=>{
+  for(const item of buttons)item.setAttribute("aria-pressed",String(item===button));
+  for(const row of document.querySelectorAll("li[data-group]"))row.hidden=button.dataset.key!=="all" && row.dataset.group!==button.dataset.key;
+  document.querySelector("#group").textContent=button.firstChild.textContent;
+  document.querySelector("#total").textContent=button.lastChild.textContent+" 篇";
+  document.querySelector("#empty").hidden=button.lastChild.textContent!=="0";
+});
+</script></body></html>
