@@ -1,50 +1,28 @@
 # 课题组协作资料库
 
-[打开小组工作台](https://zzrdearea.github.io/literature-library/)
+[查看工作台](https://zzrdearea.github.io/literature-library/) · [交付文件](https://zzrdearea.github.io/literature-library/guide.html)
 
 ## 成员投稿
 
-接受仓库协作者邀请后，首次运行：
+1. 在「交付文件」选择已有任务；个人总结直接选分类。
+2. 拖入文件，点击 **Commit changes** 提交到 **main**。
 
-```sh
-git clone https://github.com/zzrdearea/literature-library.git
-cd literature-library
-```
+首次使用请接受协作者邀请并登录 GitHub。发布成功后刷新工作台即可看到材料。仓库公开，请仅提交可公开共享的内容。
 
-每次开始前执行 `git pull --rebase origin main`。个人分享可直接放入分类目录，支持 HTML、DOCX、SVG、PDF。例如推荐算法对应 reports/category-05/。
+## 一项任务有多份材料时
 
-共同任务在分类目录下新建文件夹。复制以下内容到该文件夹的 README.md，填写真实信息。即使只有进度、还没有文件，也可以提交。
+把文件放在同一个以任务命名的文件夹里，提交到对应分类。系统按文件夹归组，显示各材料最近一次提交的成员和日期。也可直接用 Git 推送到 main。
+
+需要说明进度时，可在任务文件夹放一份 README.md：
 
 ```markdown
-# 工作名称
-
-参与人：成员甲、成员乙
+# 任务名称
+参与人：甲、乙
 状态：进行中
-当前进度：已完成哪些工作，下一步准备做什么。
+当前进度：已完成初稿，正在核对结果。
 
 ## 进展记录
-- 日期，成员：本次完成的工作。
+- 甲：已提交第一版图表。
 ```
 
-把工作材料放在 README.md 旁或子目录。HTML 直接在线阅读，SVG 和 DOCX 有预览及原文件链接，其他工作附件按文件链接展示。配图和辅助文件放进 figures/、images/ 或 assets/。状态通常填写「进行中」「已完成」或「待更新」。更新时追加进展记录，按需要修改当前进度。
-
-例如在仓库根目录提交推荐算法分类中的项目：
-
-```sh
-git add -- reports/category-05/项目简称/
-git commit -m "更新项目进度与材料"
-git push origin main
-```
-
-推送冲突时先同步远端再重试。网站按对应任务目录最后一次 Git 提交排序。工作名称、参与人、文件名可检索，成员、类别与状态可组合筛选。所有提交到此公开库的材料和进度都公开可读。
-
-## 部署与本地预览
-
-在 Settings → Pages 选择 GitHub Actions。推送 main 后自动构建并发布。本地运行：
-
-```sh
-python build.py
-python -m http.server 8000 --directory _site
-```
-
-打开 http://localhost:8000 。大类名称由团队在 categories.json 配置。
+已有任务可以只补文件。状态由组员填写，文件更新自动展示。原件随 Git 提交保留，HTML、SVG、DOCX 支持网页阅读，其他材料链接到原文件。辅助图片放进 figures、assets 或 images 子目录。

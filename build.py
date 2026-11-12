@@ -78,6 +78,7 @@ import subprocess
 reports = root / "reports"
 entries = []
 members = set()
+upload_folders = []
 asset_dirs = {"assets", "images", "figures"}
 
 
@@ -100,6 +101,14 @@ def add_entry(source, title, people, status, progress, files, history, task):
             target = target.with_name(target.name + ".html")
         link = quote(target.relative_to(site).as_posix())
         caption = '阅读 HTML 报告' if f.name == 'index.html' else f.name
+        if task:
+            latest = subprocess.run(["git", "log", "-1", "--format=%an · %as", "--", f.relative_to(root).as_posix()],
+                                    cwd=root, capture_output=True, text=True, encoding="utf-8").stdout.strip()
+            if latest:
+                author = latest.rsplit(" · ", 1)[0]
+                if author not in people:
+                    people.append(author)
+                caption += " · " + latest
         links.append(f'<a href="{link}">{escape(caption)}</a>')
     members.update(people)
     meta = " · ".join(map(escape, [categories.get(group, "未分类"), status, *people, day]))
@@ -126,6 +135,13 @@ def material(f):
 
 
 tasks = {f.parent: f for f in reports.rglob("README.md") if len(f.relative_to(reports).parts) >= 2 and f.parent.name not in categories and not asset_dirs.intersection(f.relative_to(reports).parts)}
+for category in categories:
+    directory = reports / category
+    if directory.exists():
+        for child in directory.iterdir():
+            if child.is_dir() and child.name.lower() not in asset_dirs and not child.name.startswith("."):
+                tasks.setdefault(child, None)
+
 def owner(f):
     return next((p for p in f.parents if p in tasks), None)
 
@@ -134,7 +150,8 @@ for directory, readme in tasks.items():
     title = directory.name
     history = []
     in_log = False
-    for line in readme.read_text(encoding="utf-8-sig").splitlines():
+    notes = readme.read_text(encoding="utf-8-sig") if readme else ""
+    for line in notes.splitlines():
         line = line.strip()
         if line.startswith("# "):
             title = line[2:].strip()
@@ -148,10 +165,13 @@ for directory, readme in tasks.items():
                 fields[match[1]] = match[2]
     people = [x.strip() for x in re.split("[、,，;；]", fields.get("参与人", "")) if x.strip()]
     files = sorted(f for f in directory.rglob("*") if material(f) and owner(f) == directory)
-    add_entry(directory, title, people, fields.get("状态") or "待更新", fields.get("当前进度", ""), files, history, True)
+    if not files and not readme:
+        continue
+    upload_folders.append((directory.relative_to(root).as_posix(), title))
+    add_entry(directory, title, people, fields.get("状态") or "资料分享", fields.get("当前进度", ""), files, history, True)
 
 for f in sorted(reports.rglob("*")):
-    if not material(f) or owner(f) or f.suffix.lower() not in {".html", ".svg", ".docx", ".pdf"}:
+    if not material(f) or owner(f):
         continue
     title, description = f.stem, ""
     preview = site / f.relative_to(root)
@@ -189,3 +209,12 @@ page = (root/"index.html").read_text(encoding="utf-8")
 page = page.replace("@@NAV@@","".join(buttons)).replace("@@PEOPLE@@","".join(f'<option>{escape(p)}</option>' for p in sorted(members)))
 page = page.replace("@@REPORTS@@","".join(row for _,_,row in sorted(entries,key=lambda x:-x[0])))
 (site/"index.html").write_text(page,encoding="utf-8")
+
+def upload_link(path, label):
+    url = "https://github.com/zzrdearea/literature-library/upload/main/" + quote(path)
+    return f'<li><a href="{url}">{escape(label)}</a></li>'
+
+guide = (root / "guide.html").read_text(encoding="utf-8")
+guide = guide.replace("@@TASKS@@", "".join(upload_link(path, title) for path, title in sorted(upload_folders)))
+guide = guide.replace("@@CATEGORIES@@", "".join(upload_link("reports/" + key, title) for key, title in categories.items()))
+(site / "guide.html").write_text(guide, encoding="utf-8")
